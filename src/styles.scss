@@ -1,0 +1,21 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: 'Nunito', system-ui, sans-serif;
+  background: radial-gradient(1200px 800px at 10% 10%, #ffe4f3 0%, transparent 55%),
+    radial-gradient(900px 600px at 90% 20%, #fff5e6 0%, transparent 50%),
+    radial-gradient(800px 700px at 50% 100%, #f3e8ff 0%, transparent 45%),
+    linear-gradient(165deg, #fff7fb 0%, #fff1f6 35%, #f7f0ff 100%);
+  color: #3a2a3d;
+  overflow-x: hidden;
+}

@@ -1,0 +1,236 @@
+<div class="page" aria-label="Birthday surprise for Talbiya Umang">
+  <div class="bg-hearts" aria-hidden="true">
+    @for (h of hearts; track h.id) {
+      <span
+        class="bg-heart"
+        [style.left]="h.left"
+        [style.animation-delay]="h.delay"
+        [style.animation-duration]="h.dur"
+        [style.font-size]="h.size"
+        [style.--drift]="h.drift"
+        >♥</span>
+    }
+  </div>
+
+  @if (step() === 0) {
+    <section class="shell intro panel-pop">
+      <div class="sparkle-field" aria-hidden="true">
+        @for (s of sparkles; track s.id) {
+          <span
+            class="spark"
+            [style.left]="s.left"
+            [style.top]="s.top"
+            [style.animation-delay]="s.delay"
+            [style.animation-duration]="s.dur"
+          ></span>
+        }
+      </div>
+
+      <p class="eyebrow kiss">Hey my girlllll ✨ something tiny and sweet is waiting for you 💌</p>
+      <h1 class="title script">For my favorite person</h1>
+      <p class="nameplate">Talbiyaaaa Umangggg</p>
+      <p class="lede">
+        A little birthday surprise filled with cute notes, soft sparkles, silly smiles,
+          and a few tiny questions just for you 🌸
+      </p>
+
+      <button type="button" class="btn primary pulse-ring" (click)="startQuiz()">Open the surprise 🥳</button>
+      <p class="hint">Tap the button when you are smiling (even a little).</p>
+    </section>
+  }
+
+  @if (step() >= 1 && step() <= questions.length) {
+    @if (currentQuestion(); as q) {
+      <section class="shell quiz panel-pop">
+        <header class="quiz-head">
+          <p class="eyebrow">Question {{ step() }} / {{ questions.length }}</p>
+          <div class="progress" role="progressbar" [attr.aria-valuenow]="step()" aria-valuemin="1" [attr.aria-valuemax]="questions.length" [attr.aria-valuetext]="'Question ' + step() + ' of ' + questions.length">
+            @for (q of questions; track q.key) {
+              <span class="dot" [class.active]="$index < step()"></span>
+            }
+          </div>
+        </header>
+
+        <h2 class="prompt">{{ q.prompt }}</h2>
+        <p class="subline">{{ q.subline }}</p>
+
+        <div class="options" role="list">
+          @for (opt of q.options; track opt.id; let idx = $index) {
+            <button
+              type="button"
+              class="opt-card"
+              role="listitem"
+              [class.selected]="pick() === opt.id"
+              [style.--i]="idx"
+              [disabled]="lastWhisper()"
+              (click)="selectOption(opt.id)"
+            >
+              <span class="opt-emoji" aria-hidden="true">{{ opt.emoji }}</span>
+              <span class="opt-label">{{ opt.label }}</span>
+            </button>
+          }
+        </div>
+
+        @if (lastWhisper()) {
+          <p class="answer-whisper">{{ lastWhisper() }}</p>
+        }
+
+        <div class="quiz-actions">
+          <button type="button" class="btn ghost" (click)="goBackQuiz()">Back</button>
+          <button
+            type="button"
+            class="btn primary"
+            [disabled]="!lastWhisper() && !canContinue()"
+            (click)="continueQuiz()"
+          >
+            {{ lastWhisper() ? 'Next question' : 'Next sweetness' }}
+          </button>
+        </div>
+      </section>
+    }
+  }
+
+  @if (step() === cakeStep()) {
+    <section class="shell cake panel-pop" aria-label="Birthday cake">
+      <p class="eyebrow kiss">make a wish, my beautiful girl</p>
+      <h2 class="title script">Your birthday cake</h2>
+      <p class="subline center">Tap blow — I packed extra sparkles in the frosting.</p>
+
+      <div class="cake-stage" [class.blowing]="blowing()" [class.blown]="candlesBlown()">
+        @if (candlesBlown()) {
+          <div class="smoke-field" aria-hidden="true">
+            @for (p of smokePuffs; track p.id) {
+              <span
+                class="smoke-puff"
+                [style.left]="p.left"
+                [style.animation-delay]="p.delay"
+                [style.width]="p.size"
+                [style.height]="p.size"
+              ></span>
+            }
+          </div>
+          <div class="wish-sparkles" aria-hidden="true">
+            @for (s of sparkles; track 'cake-' + s.id) {
+              <span
+                class="wish-spark"
+                [style.left]="s.left"
+                [style.top]="s.top"
+                [style.animation-delay]="s.delay"
+              ></span>
+            }
+          </div>
+        }
+
+        <div class="cake-emoji-float" aria-hidden="true">🎂</div>
+        <div class="cake-tower" aria-hidden="true">
+          <div class="cake-plate"></div>
+          <div class="cake-layer cake-layer--bottom"></div>
+          <div class="cake-layer cake-layer--mid"></div>
+          <div class="cake-layer cake-layer--top"></div>
+          <div class="cake-icing">
+            <span class="icing-dot"></span>
+            <span class="icing-dot"></span>
+            <span class="icing-dot"></span>
+            <span class="icing-dot"></span>
+            <span class="icing-dot"></span>
+          </div>
+          @for (c of candles; track c.id) {
+            <div class="candle" [style.left]="c.left">
+              <span class="candle-stick"></span>
+              <span
+                class="flame"
+                [class.out]="candlesBlown()"
+                [class.flicker]="!candlesBlown()"
+              ></span>
+            </div>
+          }
+        </div>
+
+        @if (blowing()) {
+          <div class="wind-burst" aria-hidden="true">
+            <span class="wind whoosh-1">💨</span>
+            <span class="wind whoosh-2">💨</span>
+          </div>
+        }
+      </div>
+
+      <div class="cake-actions">
+        @if (!candlesBlown()) {
+          <button type="button" class="btn primary pulse-ring blow-btn" (click)="blowCandles()" [disabled]="blowing()">
+            {{ blowing() ? 'Blowing…' : 'Blow the candles' }}
+          </button>
+          <p class="hint">Pretend you are leaning in to blow the candles babyy 🥰</p>
+        } @else {
+          <p class="wish-line script pop-in">The candles are out… make a wish, my love.</p>
+          <button type="button" class="btn primary" (click)="goToReasons()">You wanna know why your sweetheart loves you crazily?🙈</button>
+        }
+      </div>
+    </section>
+  }
+
+  @if (step() === reasonsStep()) {
+    <section class="shell reasons panel-pop" aria-label="Reasons I love you">
+      <p class="eyebrow gold">a list that never really ends</p>
+      <h2 class="title script">I loveeeeeee youuuuuuuu crazily jaaaaaaaan 🥰🥰🥰</h2>
+      <p class="subline center">Read One by one — because you deserve to hear them all.</p>
+
+      <ul class="reasons-list" aria-live="polite">
+        @for (reason of loveReasons; track $index) {
+          @if ($index < visibleReasonCount()) {
+            <li class="reason-card" [style.--ri]="$index">
+              <span class="reason-heart" aria-hidden="true">♥</span>
+              <span class="reason-text">{{ reason }}</span>
+            </li>
+          }
+        }
+      </ul>
+
+      @if (reasonsDone()) {
+        <p class="reasons-footer script pop-in">…and a hundred more I will keep adding forever.</p>
+        <button type="button" class="btn primary" (click)="goToFinale()">Open your birthday letter</button>
+      } @else {
+        <p class="hint reasons-loading">More love notes arriving…</p>
+      }
+    </section>
+  }
+
+  @if (step() === finaleStep()) {
+    <section class="shell finale panel-pop">
+      <div class="confetti-layer" aria-hidden="true">
+        @for (c of confetti; track c.id) {
+          <span
+            class="conf"
+            [style.left]="c.left"
+            [style.animation-delay]="c.delay"
+            [style.animation-duration]="c.dur"
+            [style.--hue]="c.hue + ''"
+            [style.--rot]="c.rot + 'deg'"
+          ></span>
+        }
+      </div>
+
+      <p class="eyebrow gold">Happy Birthday</p>
+      <h1 class="title script big">{{ recipient }}</h1>
+
+      <div class="letter card-float">
+        <p class="letter-open">My love,</p>
+        <p>
+          Today is about <strong>you</strong> — the way you soften hard days, the way your kindness makes the world feel
+          gentler, and the way being chosen by you still feels like magic.
+        </p>
+        <ul class="whispers">
+          @for (w of finaleWhispers(); track $index) {
+            <li>{{ w }}</li>
+          }
+        </ul>
+        <p>
+          May this year bring you rest when you need it, joy when you want it, and a love that keeps showing up — steady,
+          playful, and true.
+        </p>
+        <p class="letter-close script">Forever yours, with heart eyes and full pockets of patience.</p>
+      </div>
+
+      <button type="button" class="btn ghost" (click)="restart()">Replay the sparkle</button>
+    </section>
+  }
+</div>
