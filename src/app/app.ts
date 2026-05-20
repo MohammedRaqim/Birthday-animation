@@ -17,8 +17,1159 @@ type QuizQuestion = {
 @Component({
   selector: 'app-root',
   standalone: true,
-  templateUrl: './app.html',
-  styleUrl: './app.scss',
+  template: `
+<div class="page" aria-label="Birthday surprise for Talbiya Umang">
+  <div class="bg-hearts" aria-hidden="true">
+    @for (h of hearts; track h.id) {
+      <span
+        class="bg-heart"
+        [style.left]="h.left"
+        [style.animation-delay]="h.delay"
+        [style.animation-duration]="h.dur"
+        [style.font-size]="h.size"
+        [style.--drift]="h.drift"
+        >♥</span>
+    }
+  </div>
+
+  @if (step() === 0) {
+    <section class="shell intro panel-pop">
+      <div class="sparkle-field" aria-hidden="true">
+        @for (s of sparkles; track s.id) {
+          <span
+            class="spark"
+            [style.left]="s.left"
+            [style.top]="s.top"
+            [style.animation-delay]="s.delay"
+            [style.animation-duration]="s.dur"
+          ></span>
+        }
+      </div>
+
+      <p class="eyebrow kiss">Hey my girlllll ✨ something tiny and sweet is waiting for you 💌</p>
+      <h1 class="title script">For my favorite person</h1>
+      <p class="nameplate">Talbiyaaaa Umangggg</p>
+      <p class="lede">
+        A little birthday surprise filled with cute notes, soft sparkles, silly smiles,
+          and a few tiny questions just for you 🌸
+      </p>
+
+      <button type="button" class="btn primary pulse-ring" (click)="startQuiz()">Open the surprise 🥳</button>
+      <p class="hint">Tap the button when you are smiling (even a little).</p>
+    </section>
+  }
+
+  @if (step() >= 1 && step() <= questions.length) {
+    @if (currentQuestion(); as q) {
+      <section class="shell quiz panel-pop">
+        <header class="quiz-head">
+          <p class="eyebrow">Question {{ step() }} / {{ questions.length }}</p>
+          <div class="progress" role="progressbar" [attr.aria-valuenow]="step()" aria-valuemin="1" [attr.aria-valuemax]="questions.length" [attr.aria-valuetext]="'Question ' + step() + ' of ' + questions.length">
+            @for (q of questions; track q.key) {
+              <span class="dot" [class.active]="$index < step()"></span>
+            }
+          </div>
+        </header>
+
+        <h2 class="prompt">{{ q.prompt }}</h2>
+        <p class="subline">{{ q.subline }}</p>
+
+        <div class="options" role="list">
+          @for (opt of q.options; track opt.id; let idx = $index) {
+            <button
+              type="button"
+              class="opt-card"
+              role="listitem"
+              [class.selected]="pick() === opt.id"
+              [style.--i]="idx"
+              [disabled]="lastWhisper()"
+              (click)="selectOption(opt.id)"
+            >
+              <span class="opt-emoji" aria-hidden="true">{{ opt.emoji }}</span>
+              <span class="opt-label">{{ opt.label }}</span>
+            </button>
+          }
+        </div>
+
+        @if (lastWhisper()) {
+          <p class="answer-whisper">{{ lastWhisper() }}</p>
+        }
+
+        <div class="quiz-actions">
+          <button type="button" class="btn ghost" (click)="goBackQuiz()">Back</button>
+          <button
+            type="button"
+            class="btn primary"
+            [disabled]="!lastWhisper() && !canContinue()"
+            (click)="continueQuiz()"
+          >
+            {{ lastWhisper() ? 'Next question' : 'Next sweetness' }}
+          </button>
+        </div>
+      </section>
+    }
+  }
+
+  @if (step() === cakeStep()) {
+    <section class="shell cake panel-pop" aria-label="Birthday cake">
+      <p class="eyebrow kiss">make a wish, my beautiful girl</p>
+      <h2 class="title script">Your birthday cake</h2>
+      <p class="subline center">Tap blow — I packed extra sparkles in the frosting.</p>
+
+      <div class="cake-stage" [class.blowing]="blowing()" [class.blown]="candlesBlown()">
+        @if (candlesBlown()) {
+          <div class="smoke-field" aria-hidden="true">
+            @for (p of smokePuffs; track p.id) {
+              <span
+                class="smoke-puff"
+                [style.left]="p.left"
+                [style.animation-delay]="p.delay"
+                [style.width]="p.size"
+                [style.height]="p.size"
+              ></span>
+            }
+          </div>
+          <div class="wish-sparkles" aria-hidden="true">
+            @for (s of sparkles; track 'cake-' + s.id) {
+              <span
+                class="wish-spark"
+                [style.left]="s.left"
+                [style.top]="s.top"
+                [style.animation-delay]="s.delay"
+              ></span>
+            }
+          </div>
+        }
+
+        <div class="cake-emoji-float" aria-hidden="true">🎂</div>
+        <div class="cake-tower" aria-hidden="true">
+          <div class="cake-plate"></div>
+          <div class="cake-layer cake-layer--bottom"></div>
+          <div class="cake-layer cake-layer--mid"></div>
+          <div class="cake-layer cake-layer--top"></div>
+          <div class="cake-icing">
+            <span class="icing-dot"></span>
+            <span class="icing-dot"></span>
+            <span class="icing-dot"></span>
+            <span class="icing-dot"></span>
+            <span class="icing-dot"></span>
+          </div>
+          @for (c of candles; track c.id) {
+            <div class="candle" [style.left]="c.left">
+              <span class="candle-stick"></span>
+              <span
+                class="flame"
+                [class.out]="candlesBlown()"
+                [class.flicker]="!candlesBlown()"
+              ></span>
+            </div>
+          }
+        </div>
+
+        @if (blowing()) {
+          <div class="wind-burst" aria-hidden="true">
+            <span class="wind whoosh-1">💨</span>
+            <span class="wind whoosh-2">💨</span>
+          </div>
+        }
+      </div>
+
+      <div class="cake-actions">
+        @if (!candlesBlown()) {
+          <button type="button" class="btn primary pulse-ring blow-btn" (click)="blowCandles()" [disabled]="blowing()">
+            {{ blowing() ? 'Blowing…' : 'Blow the candles' }}
+          </button>
+          <p class="hint">Pretend you are leaning in to blow the candles babyy 🥰</p>
+        } @else {
+          <p class="wish-line script pop-in">The candles are out… make a wish, my love.</p>
+          <button type="button" class="btn primary" (click)="goToReasons()">You wanna know why your sweetheart loves you crazily?🙈</button>
+        }
+      </div>
+    </section>
+  }
+
+  @if (step() === reasonsStep()) {
+    <section class="shell reasons panel-pop" aria-label="Reasons I love you">
+      <p class="eyebrow gold">a list that never really ends</p>
+      <h2 class="title script">I loveeeeeee youuuuuuuu crazily jaaaaaaaan 🥰🥰🥰</h2>
+      <p class="subline center">Read One by one — because you deserve to hear them all.</p>
+
+      <ul class="reasons-list" aria-live="polite">
+        @for (reason of loveReasons; track $index) {
+          @if ($index < visibleReasonCount()) {
+            <li class="reason-card" [style.--ri]="$index">
+              <span class="reason-heart" aria-hidden="true">♥</span>
+              <span class="reason-text">{{ reason }}</span>
+            </li>
+          }
+        }
+      </ul>
+
+      @if (reasonsDone()) {
+        <p class="reasons-footer script pop-in">…and a hundred more I will keep adding forever.</p>
+        <button type="button" class="btn primary" (click)="goToFinale()">Open your birthday letter</button>
+      } @else {
+        <p class="hint reasons-loading">More love notes arriving…</p>
+      }
+    </section>
+  }
+
+  @if (step() === finaleStep()) {
+    <section class="shell finale panel-pop">
+      <div class="confetti-layer" aria-hidden="true">
+        @for (c of confetti; track c.id) {
+          <span
+            class="conf"
+            [style.left]="c.left"
+            [style.animation-delay]="c.delay"
+            [style.animation-duration]="c.dur"
+            [style.--hue]="c.hue + ''"
+            [style.--rot]="c.rot + 'deg'"
+          ></span>
+        }
+      </div>
+
+      <p class="eyebrow gold">Happy Birthday</p>
+      <h1 class="title script big">{{ recipient }}</h1>
+
+      <div class="letter card-float">
+        <p class="letter-open">My love,</p>
+        <p>
+          Today is about <strong>you</strong> — the way you soften hard days, the way your kindness makes the world feel
+          gentler, and the way being chosen by you still feels like magic.
+        </p>
+        <ul class="whispers">
+          @for (w of finaleWhispers(); track $index) {
+            <li>{{ w }}</li>
+          }
+        </ul>
+        <p>
+          May this year bring you rest when you need it, joy when you want it, and a love that keeps showing up — steady,
+          playful, and true.
+        </p>
+        <p class="letter-close script">Forever yours, with heart eyes and full pockets of patience.</p>
+      </div>
+
+      <button type="button" class="btn ghost" (click)="restart()">Replay the sparkle</button>
+    </section>
+  }
+</div>
+  `,
+  styles: [
+    `:host {
+  display: block;
+  min-height: 100%;
+}
+
+.page {
+  position: relative;
+  min-height: 100dvh;
+  padding: clamp(1.25rem, 3vw, 2.75rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-hearts {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.bg-heart {
+  position: absolute;
+  bottom: -12%;
+  color: #d1006f;
+  text-shadow: 0 0 8px rgba(209, 0, 111, 0.5);
+  filter: drop-shadow(0 10px 18px rgba(255, 120, 170, 0.12));
+  animation: floatUp linear infinite;
+  transform: translateX(0);
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(-8deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.85;
+  }
+  70% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate3d(var(--drift), -120vh, 0) rotate(10deg);
+    opacity: 0;
+  }
+}
+
+.shell {
+  position: relative;
+  z-index: 1;
+  width: min(920px, 100%);
+  border-radius: 28px;
+  padding: clamp(1.25rem, 3.2vw, 2.25rem);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.62));
+  border: 1px solid rgba(255, 182, 214, 0.55);
+  box-shadow: 0 24px 70px rgba(120, 40, 110, 0.12), 0 2px 0 rgba(255, 255, 255, 0.65) inset;
+  backdrop-filter: blur(10px);
+}
+
+.panel-pop {
+  animation: panelIn 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.intro {
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0 0 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: rgba(90, 40, 90, 0.62);
+}
+
+.eyebrow.kiss::after {
+  content: ' ✿';
+  opacity: 0.7;
+}
+
+.title {
+  margin: 0 0 0.35rem;
+  font-weight: 800;
+  line-height: 1.05;
+  font-size: clamp(2.05rem, 4.6vw, 3.25rem);
+  color: #2f1f3a;
+}
+
+.title.script {
+  font-family: 'Dancing Script', cursive;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.title.big {
+  font-size: clamp(2.6rem, 6vw, 4.1rem);
+  margin-bottom: 0.75rem;
+}
+
+.nameplate {
+  margin: 0 0 1rem;
+  font-weight: 900;
+  font-size: clamp(2.15rem, 2.6vw, 1.45rem);
+  background: linear-gradient(90deg, #ff5fa8, #b56cff, #ff8fb7);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.lede {
+  margin: 0 auto 1.35rem;
+  max-width: 52ch;
+  font-size: clamp(1rem, 2.2vw, 1.12rem);
+  line-height: 1.65;
+  color: rgba(47, 31, 58, 0.78);
+}
+
+.hint {
+  margin: 0.85rem 0 0;
+  font-size: 0.95rem;
+  color: rgba(47, 31, 58, 0.55);
+}
+
+.btn {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 0.95rem 1.25rem;
+  font-weight: 900;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease, opacity 180ms ease;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+  filter: grayscale(0.15);
+}
+
+.btn.primary {
+  color: white;
+  background: radial-gradient(120% 120% at 20% 20%, #ff7fb6, #ff4f9a 45%, #c96bff);
+  box-shadow: 0 18px 40px rgba(255, 70, 150, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.35) inset;
+}
+
+.btn.primary:not(:disabled):hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: 0 22px 55px rgba(255, 70, 150, 0.34), 0 0 0 1px rgba(255, 255, 255, 0.35) inset;
+}
+
+.btn.primary:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.btn.ghost {
+  margin-top: 1rem;
+  color: rgba(47, 31, 58, 0.78);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 182, 214, 0.65);
+  box-shadow: 0 10px 26px rgba(120, 40, 110, 0.08);
+}
+
+.btn.ghost:hover {
+  transform: translateY(-1px);
+}
+
+.pulse-ring {
+  position: relative;
+}
+
+.pulse-ring::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: inherit;
+  border: 2px solid rgba(255, 120, 190, 0.35);
+  animation: pulse 1.8s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.65;
+  }
+  70% {
+    transform: scale(1.06);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.sparkle-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.spark {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, #fff, rgba(255, 200, 240, 0.2) 55%, transparent 70%);
+  filter: drop-shadow(0 0 10px rgba(255, 190, 240, 0.55));
+  animation: twinkle ease-in-out infinite;
+  opacity: 0.75;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    transform: scale(0.7) rotate(0deg);
+    opacity: 0.25;
+  }
+  50% {
+    transform: scale(1.15) rotate(18deg);
+    opacity: 0.95;
+  }
+}
+
+.quiz-head {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.progress {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(180, 120, 190, 0.22);
+  border: 1px solid rgba(255, 182, 214, 0.45);
+  transition: transform 220ms ease, background 220ms ease;
+}
+
+.dot.active {
+  background: linear-gradient(135deg, #ff6fb4, #c56bff);
+  transform: scale(1.15);
+}
+
+.prompt {
+  margin: 0.25rem 0 0.35rem;
+  font-size: clamp(1.25rem, 2.8vw, 1.65rem);
+  line-height: 1.25;
+  color: #2a1b33;
+}
+
+.subline {
+  margin: 0 0 1.1rem;
+  color: rgba(47, 31, 58, 0.62);
+  font-weight: 600;
+}
+
+.answer-whisper {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 18px;
+  background: rgba(255, 245, 255, 0.85);
+  border: 1px solid rgba(255, 190, 230, 0.75);
+  color: rgba(78, 32, 76, 0.88);
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (max-width: 720px) {
+  .options {
+    grid-template-columns: 1fr;
+  }
+}
+
+.opt-card {
+  text-align: left;
+  border-radius: 18px;
+  padding: 0.95rem 0.95rem;
+  border: 1px solid rgba(255, 182, 214, 0.55);
+  background: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: start;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  animation: riseIn 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i) * 0.07s);
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.opt-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(120, 40, 110, 0.12);
+}
+
+.opt-card.selected {
+  border-color: rgba(255, 105, 170, 0.85);
+  background: linear-gradient(135deg, rgba(255, 240, 250, 0.95), rgba(245, 235, 255, 0.92));
+  box-shadow: 0 18px 40px rgba(255, 90, 160, 0.16), 0 0 0 3px rgba(255, 140, 200, 0.18) inset;
+}
+
+.opt-emoji {
+  font-size: 1.35rem;
+  line-height: 1;
+  transform: translateY(1px);
+}
+
+.opt-label {
+  font-weight: 800;
+  color: rgba(42, 27, 51, 0.88);
+  line-height: 1.35;
+}
+
+.quiz-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.15rem;
+}
+
+.finale {
+  text-align: center;
+}
+
+.eyebrow.gold {
+  color: rgba(120, 70, 20, 0.65);
+}
+
+.letter {
+  text-align: left;
+  margin: 0.75rem auto 0;
+  max-width: 62ch;
+  border-radius: 22px;
+  padding: clamp(1rem, 2.6vw, 1.35rem);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 210, 230, 0.65);
+  color: rgba(42, 27, 51, 0.86);
+  line-height: 1.65;
+  box-shadow: 0 18px 45px rgba(120, 40, 110, 0.1);
+}
+
+.letter p {
+  margin: 0.75rem 0;
+}
+
+.letter-open {
+  margin-top: 0.25rem !important;
+  font-weight: 900;
+}
+
+.letter-close {
+  margin-bottom: 0.25rem !important;
+  font-size: 1.35rem;
+  color: rgba(90, 40, 110, 0.85);
+}
+
+.whispers {
+  margin: 0.5rem 0 0.75rem;
+  padding-left: 1.1rem;
+}
+
+.whispers li {
+  margin: 0.45rem 0;
+  font-weight: 700;
+  color: rgba(90, 40, 110, 0.82);
+}
+
+.card-float {
+  animation: floaty 5.2s ease-in-out infinite;
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.confetti-layer {
+  pointer-events: none;
+  position: absolute;
+  inset: -12px;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.conf {
+  position: absolute;
+  top: -12%;
+  width: 10px;
+  height: 16px;
+  border-radius: 3px;
+  background: hsl(var(--hue), 90%, 62%);
+  animation: confettiFall ease-in infinite;
+  transform: rotate(var(--rot));
+  opacity: 0.9;
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(0) rotate(var(--rot));
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120vh) rotate(calc(var(--rot) + 220deg));
+    opacity: 0.85;
+  }
+}
+
+.subline.center {
+  text-align: center;
+}
+
+.cake {
+  text-align: center;
+}
+
+.cake-stage {
+  position: relative;
+  margin: 0.5rem auto 1.25rem;
+  min-height: 280px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cake-stage.blowing {
+  transform: scale(0.985) translateX(-2px);
+}
+
+.cake-stage.blown .cake-tower {
+  animation: cakeCelebrate 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes cakeCelebrate {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  35% {
+    transform: translateY(-8px) scale(1.03);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.cake-emoji-float {
+  position: absolute;
+  top: 0;
+  right: 8%;
+  font-size: 2rem;
+  opacity: 0.35;
+  animation: bobble 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes bobble {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-6deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(6deg);
+  }
+}
+
+.cake-tower {
+  position: relative;
+  width: min(280px, 72vw);
+  height: 210px;
+}
+
+.cake-plate {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 88%;
+  height: 18px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: radial-gradient(circle at 50% 40%, #fffefc, #e7d9ff 55%, #d8c6f4 100%);
+  box-shadow: 0 10px 26px rgba(80, 35, 90, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.cake-layer {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 16px 36px rgba(110, 40, 110, 0.18);
+}
+
+.cake-layer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.65), transparent 55%);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.cake-layer--bottom {
+  bottom: 14px;
+  width: 88%;
+  height: 54px;
+  background: linear-gradient(180deg, #ffc7d8 0%, #ff9dc0 45%, #ff7caa 100%);
+}
+
+.cake-layer--mid {
+  bottom: 64px;
+  width: 74%;
+  height: 46px;
+  background: linear-gradient(180deg, #ffe8f3 0%, #ffb8d9 45%, #ff91c8 100%);
+}
+
+.cake-layer--top {
+  bottom: 110px;
+  width: 62%;
+  height: 40px;
+  background: linear-gradient(180deg, #fff1f8 0%, #ffcbe4 40%, #ff9ac7 100%);
+}
+
+.cake-icing {
+  position: absolute;
+  bottom: 148px;
+  left: 50%;
+  width: 70%;
+  height: 22px;
+  transform: translateX(-50%);
+  border-radius: 999px 999px 16px 16px;
+  background: radial-gradient(circle at 50% 20%, #fff, #ffe9f4 45%, #ffcfe6 100%);
+  box-shadow: inset 0 2px 0 rgba(255, 230, 245, 0.95), inset 0 -5px 10px rgba(255, 193, 229, 0.24);
+  display: flex;
+  justify-content: space-evenly;
+  align-items: flex-start;
+  padding-top: 4px;
+}
+
+.cake-icing::before,
+.cake-icing::after {
+  content: '';
+  position: absolute;
+  width: 20%;
+  height: 14px;
+  bottom: 1px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,185,220,0.9));
+  border-radius: 50%;
+}
+
+.cake-icing::before {
+  left: 8%;
+}
+
+.cake-icing::after {
+  right: 8%;
+}
+
+.icing-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, #ff82b5, #ff4297);
+  box-shadow: 0 0 10px rgba(255, 110, 170, 0.35);
+}
+
+.candle {
+  position: absolute;
+  bottom: 152px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+.candle-stick {
+  width: 8px;
+  height: 38px;
+  border-radius: 4px;
+  background: repeating-linear-gradient(
+    180deg,
+    #fff7ee 0 5px,
+    #ffd7a6 5px 10px,
+    #fcd9c4 10px 15px
+  );
+  box-shadow: inset 0 0 3px rgba(255, 200, 220, 0.6), 0 4px 12px rgba(90, 30, 70, 0.14);
+}
+
+.flame {
+  display: block;
+  width: 15px;
+  height: 24px;
+  margin-bottom: -4px;
+  border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
+  background: radial-gradient(circle at 40% 20%, #fffbee, #ffdd67 25%, #ff9c42 55%, #ff6d2d 100%);
+  box-shadow: 0 0 18px rgba(255, 140, 60, 0.75);
+  transform-origin: 50% 90%;
+  transition: opacity 380ms ease, transform 380ms ease, filter 380ms ease;
+}
+
+.flame.flicker {
+  animation: flicker 0.55s ease-in-out infinite alternate;
+}
+
+@keyframes flicker {
+  0% {
+    transform: scale(1) rotate(-3deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.08, 1.14) rotate(3deg);
+    opacity: 0.92;
+  }
+}
+
+.flame.out {
+  opacity: 0;
+  transform: scale(0.2) translateY(8px);
+  filter: blur(2px);
+}
+
+.smoke-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.smoke-puff {
+  position: absolute;
+  bottom: 48%;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.85), rgba(220, 210, 230, 0.15) 70%, transparent);
+  filter: blur(1px);
+  animation: smokeRise 1.6s ease-out forwards;
+}
+
+@keyframes smokeRise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+  20% {
+    opacity: 0.75;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-90px) scale(1.6);
+  }
+}
+
+.wish-sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.wish-spark {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: radial-gradient(circle, #fff, #ffd4f0);
+  animation: wishPop 1.2s ease-out infinite;
+}
+
+@keyframes wishPop {
+  0%,
+  100% {
+    transform: scale(0.4);
+    opacity: 0.2;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+.wind-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.wind {
+  position: absolute;
+  font-size: 2rem;
+  opacity: 0;
+  animation: whoosh 720ms ease-out forwards;
+}
+
+.whoosh-1 {
+  left: 8%;
+  bottom: 42%;
+}
+
+.whoosh-2 {
+  right: 10%;
+  bottom: 48%;
+  animation-delay: 80ms;
+}
+
+@keyframes whoosh {
+  0% {
+    opacity: 0;
+    transform: translateX(20px) scale(0.7);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-40px) scale(1.1);
+  }
+}
+
+.cake-actions {
+  display: grid;
+  gap: 0.65rem;
+  justify-items: center;
+}
+
+.wish-line {
+  margin: 0;
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  color: rgba(90, 40, 110, 0.88);
+}
+
+.pop-in {
+  animation: popIn 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.reasons {
+  text-align: center;
+}
+
+.reasons-list {
+  list-style: none;
+  margin: 1rem 0 0.5rem;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+  max-height: min(52vh, 420px);
+  overflow-y: auto;
+  text-align: left;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 150, 200, 0.5) transparent;
+}
+
+.reason-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.65rem;
+  align-items: start;
+  padding: 0.75rem 0.9rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 182, 214, 0.55);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 12px 28px rgba(120, 40, 110, 0.08);
+  animation: reasonIn 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--ri) * 0.04s);
+}
+
+@keyframes reasonIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-12px) scale(0.98);
+  }
+  60% {
+    transform: translateX(4px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.reason-heart {
+  color: #ff5fa8;
+  font-size: 1.1rem;
+  line-height: 1.4;
+  animation: heartBeat 1.1s ease-in-out infinite;
+  animation-delay: calc(var(--ri) * 0.07s);
+}
+
+@keyframes heartBeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.18);
+  }
+}
+
+.reason-text {
+  font-weight: 700;
+  line-height: 1.45;
+  color: rgba(42, 27, 51, 0.88);
+}
+
+.reasons-footer {
+  margin: 0.75rem 0 1rem;
+  font-size: clamp(1.2rem, 2.8vw, 1.55rem);
+  color: rgba(90, 40, 110, 0.85);
+}
+
+.reasons-loading {
+  animation: pulseText 1.2s ease-in-out infinite;
+}
+
+@keyframes pulseText {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-heart,
+  .spark,
+  .conf,
+  .card-float,
+  .pulse-ring::after,
+  .opt-card,
+  .panel-pop,
+  .flame.flicker,
+  .smoke-puff,
+  .wish-spark,
+  .wind,
+  .cake-emoji-float,
+  .reason-card,
+  .reason-heart,
+  .reasons-loading {
+    animation: none !important;
+  }
+
+  .opt-card {
+    animation-delay: 0s !important;
+  }
+
+  .cake-stage.blowing {
+    transform: none;
+  }
+}
+    `]
 })
 export class App {
   private reasonsTimer: ReturnType<typeof setInterval> | null = null;
