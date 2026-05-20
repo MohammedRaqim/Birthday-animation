@@ -1,5 +1,3 @@
-import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
-import { App } from './app/app';
-
-bootstrapApplication(App, appConfig).catch((err) => console.error(err));
+// Angular bootstrapping is no longer required for the inline app in src/index.html.
+// This file remains so the Angular CLI build process can still produce a valid bundle.
+console.log('main.ts is now a no-op.');
